@@ -1,0 +1,17 @@
+# Build output and tooling
+venv/
+.venv/
+__pycache__/
+*.pyc
+build/
+instance_ttf/
+instance_otf/
+master_ttf/
+master_otf/
+*.ufo.bak
+.DS_Store
+
+# Keep generated binaries out of the repo; they are published as release assets.
+# Remove these lines if you prefer to commit fonts/ at release time.
+fonts/*
+!fonts/.gitkeep

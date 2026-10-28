@@ -1,0 +1,82 @@
+name: Build and check fonts
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    # The template itself has no sources, so the build only runs once real
+    # source files exist in sources/.
+    runs-on: ubuntu-latest
+    outputs:
+      has_sources: ${{ steps.check.outputs.has_sources }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        run: |
+          if find sources -maxdepth 2 \( -name '*.glyphs' -o -name '*.glyphspackage' -o -name '*.designspace' -o -name '*.ufo' \) | grep -q .; then
+            echo "has_sources=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_sources=false" >> "$GITHUB_OUTPUT"
+            echo "No font sources found in sources/, skipping build."
+          fi
+
+  build:
+    needs: detect
+    if: needs.detect.outputs.has_sources == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tooling
+        run: pip install -r requirements.txt
+      - name: Build fonts
+        run: gftools builder sources/config.yaml
+      - name: Check fonts with Fontbakery
+        # Soft-fail while the project is young. Remove continue-on-error
+        # once the checks pass cleanly and you want them to block merges.
+        continue-on-error: true
+        run: |
+          mkdir -p reports
+          fontbakery check-universal --html reports/fontbakery.html $(find fonts -name '*.ttf') || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fonts
+          path: fonts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fontbakery-report
+          path: reports
+          if-no-files-found: ignore
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: fonts
+          path: fonts
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NAME="${GITHUB_REPOSITORY#*/}-${GITHUB_REF_NAME}"
+          mkdir -p "dist/$NAME"
+          cp -r fonts/. "dist/$NAME/"
+          cp OFL.txt AUTHORS.txt CONTRIBUTORS.txt "dist/$NAME/"
+          (cd dist && zip -r "$NAME.zip" "$NAME")
+          gh release create "$GITHUB_REF_NAME" "dist/$NAME.zip" --title "$GITHUB_REF_NAME" --generate-notes

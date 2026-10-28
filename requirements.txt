@@ -1,0 +1,4 @@
+# Font build and QA tooling. Pin exact versions once you have a working build.
+gftools
+fontmake
+fontbakery

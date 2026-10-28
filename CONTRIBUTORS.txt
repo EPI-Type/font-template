@@ -1,0 +1,9 @@
+# This is the list of people who have contributed to this project,
+# and includes those not listed in AUTHORS.txt because they have not
+# contributed to the project in a way that requires a copyright statement.
+#
+# Names should be added to this file like so:
+# Name <email address>
+#
+# The email address is optional.
+

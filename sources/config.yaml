@@ -1,0 +1,22 @@
+# Build configuration for gftools builder (https://github.com/googlefonts/gftools-builder).
+# Replace the values below, put your source file(s) next to this file in sources/,
+# and run from the repository root:
+#
+#   python3 -m venv venv && source venv/bin/activate
+#   pip install -r requirements.txt
+#   gftools builder sources/config.yaml
+#
+# Output goes to ../fonts relative to this file unless you set outputDir.
+
+sources:
+  - YourTypeface.glyphs       # .glyphs, .glyphspackage, .designspace or .ufo
+
+familyName: "Your Typeface"
+
+# Uncomment to control what gets built:
+# buildVariable: true
+# buildStatic: true
+# buildOTF: true
+# buildTTF: true
+# buildWebfont: true
+# outputDir: ../fonts
